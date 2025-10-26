@@ -1,0 +1,80 @@
+name: Build Slither binaries
+
+on:
+  workflow_dispatch:        # exécution manuelle
+  push:
+    tags:
+      - "v*"                # ex : v0.1.0
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Slither and PyInstaller
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install slither-analyzer pyinstaller
+
+      - name: Build Slither binary
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "from slither.__main__ import main" > slither_entry.py
+            echo "if __name__ == '__main__':" >> slither_entry.py
+            echo "    main()" >> slither_entry.py
+            pyinstaller --onefile --name slither slither_entry.py
+          else
+            pyinstaller --onefile $(which slither)
+          fi
+        shell: bash
+
+      - name: Rename binary for OS
+        run: |
+          mkdir -p dist_out
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            mv dist/slither dist_out/slither-linux
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            mv dist/slither dist_out/slither-macos
+          else
+            mv dist/slither.exe dist_out/slither-win.exe
+          fi
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: slither-${{ matrix.os }}
+          path: dist_out/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./binaries
+
+      - name: Display files
+        run: ls -R ./binaries
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "hardhat-vigil3 ${{ github.ref_name }}"
+          files: ./binaries/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
