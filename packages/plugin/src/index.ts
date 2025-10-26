@@ -1,25 +1,32 @@
 import { task } from "hardhat/config";
-import { ArgumentType } from "hardhat/types/arguments";
 import type { HardhatPlugin } from "hardhat/types/plugins";
 
 import "./type-extensions.js";
 
 const plugin: HardhatPlugin = {
-  id: "hardhat-my-plugin",
+  id: "vigil3",
   hookHandlers: {
     config: () => import("./hooks/config.js"),
     network: () => import("./hooks/network.js"),
   },
   tasks: [
-    task("my-task", "Prints a greeting.")
+      task("v3", "vigil3 is up :)")
+      .setAction(() => import("./tasks/v3.js"))
+      .build()
+
+      /*task("vigil3", "Analyze Solidity files with Slither")
       .addOption({
-        name: "who",
-        description: "Who is receiving the greeting.",
+        name: "file",
+        description: "Path to Solidity file or folder",
         type: ArgumentType.STRING,
-        defaultValue: "Hardhat",
+        defaultValue: "contracts",
       })
-      .setAction(() => import("./tasks/my-task.js"))
-      .build(),
+      .setAction(() => import("./tasks/vigil3.js"))
+      .build(),*/
+
+    /*task("compile", "Compile and enforce Vigil3 security checks")
+      .setAction(() => import("./tasks/compile.js"))
+      .build(),*/
   ],
 };
 
