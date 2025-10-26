@@ -7,15 +7,16 @@ import { getSlitherBinaryPath } from "./binaries.js";
  * Run Slither on one or several Solidity files.
  * If a directory (e.g. "contracts") is given, analyzes every .sol file inside it.
  *
- * Each run generates its own JSON report:
- *   slither-Counter_sol.json, slither-Token_sol.json, etc.
+ * All results are merged into a single JSON report (like compile output).
+ * Output: slither-report.json
  */
-export async function runSlither(filePath: string): Promise<string | string[]> {
+export async function runSlither(filePath: string): Promise<string> {
   const absolutePath = path.resolve(filePath);
   const slitherPath = await getSlitherBinaryPath();
 
-  // Vérifie si c’est un dossier
   const stats = fs.statSync(absolutePath);
+  const reports: string[] = [];
+
   if (stats.isDirectory()) {
     const allFiles = collectSolidityFiles(absolutePath);
     if (allFiles.length === 0) {
@@ -26,23 +27,41 @@ export async function runSlither(filePath: string): Promise<string | string[]> {
       `\x1b[36m[vigil3] Found ${allFiles.length} Solidity file(s) in ${filePath}\x1b[0m`
     );
 
-    const reports: string[] = [];
     for (const file of allFiles) {
-      const report = await analyzeSingleFile(slitherPath, file);
-      reports.push(report);
+      const [reportPath] = await analyzeSingleFile(slitherPath, file);
+      reports.push(reportPath);
     }
-
-    return reports;
+  } else {
+    const [reportPath] = await analyzeSingleFile(slitherPath, absolutePath);
+    reports.push(reportPath);
   }
 
-  // Cas simple : un seul fichier
-  return analyzeSingleFile(slitherPath, absolutePath);
+  // Combine all JSON reports into one single file (for guard.ts)
+  const mergedReportPath = path.join(process.cwd(), "slither-report.json");
+  const mergedData: any[] = [];
+
+  for (const report of reports) {
+    try {
+      const data = readSlitherReport(report);
+      mergedData.push(data);
+    } catch (err: any) {
+      console.warn(`[vigil3] ⚠️ Could not parse report ${report}: ${err.message}`);
+    }
+  }
+
+  fs.writeFileSync(mergedReportPath, JSON.stringify(mergedData, null, 2), "utf8");
+  console.log("\x1b[32m%s\x1b[0m", `[vigil3] Combined report generated: ${mergedReportPath}`);
+
+  return mergedReportPath;
 }
 
 /**
  * Analyse un fichier unique et génère un rapport JSON distinct.
  */
-async function analyzeSingleFile(slitherPath: string, absolutePath: string): Promise<string> {
+async function analyzeSingleFile(
+  slitherPath: string,
+  absolutePath: string
+): Promise<string[]> {
   const sanitizedName = path.basename(absolutePath).replace(/[^a-zA-Z0-9._-]/g, "_");
   const outputFile = path.join(process.cwd(), `slither-${sanitizedName}.json`);
 
@@ -76,7 +95,7 @@ async function analyzeSingleFile(slitherPath: string, absolutePath: string): Pro
   }
 
   console.log("\x1b[32m%s\x1b[0m", `[vigil3] Report generated: ${outputFile}`);
-  return outputFile;
+  return [outputFile];
 }
 
 /**
