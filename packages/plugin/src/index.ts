@@ -1,4 +1,4 @@
-import { task } from "hardhat/config";
+import { task, overrideTask } from "hardhat/config";
 import type { HardhatPlugin } from "hardhat/types/plugins";
 import { ArgumentType } from "hardhat/types/arguments";
 
@@ -25,7 +25,7 @@ const plugin: HardhatPlugin = {
       .setAction(() => import("./tasks/vigil3.js"))
       .build(),
 
-    task("compile", "Compile and enforce Vigil3 security checks")
+    overrideTask("compile")
       .setAction(() => import("./tasks/compile.js"))
       .build(),
   ],
