@@ -4,6 +4,9 @@ import "hardhat/types/config";
 declare module "hardhat/types/config" {
   interface HardhatUserConfig {
     myConfig?: MyPluginUserConfig;
+    vigil3?: {
+      blockOnSeverities?: ("High" | "Medium" | "Low" | "Informational" | "Optimization")[];
+    };
   }
 
   interface HardhatConfig {

@@ -1,5 +1,5 @@
 // src/tasks/compile.ts
-/*import type { HardhatRuntimeEnvironment } from "hardhat/types/hre";
+import type { HardhatRuntimeEnvironment } from "hardhat/types/hre";
 import { enforceVulnerabilitiesGuard } from "../guard.js";
 
 export default async function (
@@ -11,4 +11,4 @@ export default async function (
     await runSuper(args);
   }
   await enforceVulnerabilitiesGuard(process.cwd(), hre.config);
-}*/
+}
