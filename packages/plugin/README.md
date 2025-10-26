@@ -1,55 +1,71 @@
-# `hardhat-my-plugin`
+# hardhat-vigil3
 
-This is an example plugin that adds a task that prints a greeting.
+Hardhat plugin to analyze Solidity contracts with **Slither** and block deployments when vulnerabilities are found.
 
 ## Installation
 
-To install this plugin, run the following command:
+In an existing Hardhat project:
 
 ```bash
-npm install --save-dev hardhat-my-plugin
+npm install --save-dev hardhat vigil3
 ```
 
-In your `hardhat.config.ts` file, import the plugin and add it to the `plugins` array:
+During installation, the plugin automatically downloads a **Slither** binary for your OS (Linux, macOS, or Windows).
+
+## Configuration
+
+In your `hardhat.config.ts`:
 
 ```ts
-import myPlugin from "hardhat-my-plugin";
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import "vigil3";
 
-export default {
-  plugins: [myPlugin],
+const config: HardhatUserConfig = {
+  solidity: "0.8.24",
+  vigil3: {
+    // Severity levels that block compile/deploy
+    // Valid values: "High" | "Medium" | "Low" | "Informational" | "Optimization"
+    blockOnSeverities: ["High", "Medium"],
+  },
 };
+
+export default config;
 ```
 
 ## Usage
 
-The plugin adds a new task called `my-task`. To run it, use the this command:
+### Scan a contract manually
+```bash
+npx hardhat vigil3 contracts/MyContract.sol
+```
+Generates `slither-report.json` at the project root.
+
+### Check the plugin is loaded
+```bash
+npx hardhat v3
+```
+
+### Compile
+Any command that triggers compilation (e.g. deploy scripts) will run the guard:
+```bash
+npx hardhat compile
+```
+If Slither finds issues at or above the configured severities, the process will fail and block the deployment.
+
+## Slither Binary Location
+
+The downloaded binary is stored in your home directory:
+- Linux: `~/.vigil3/slither-linux`
+- macOS: `~/.vigil3/slither-macos`
+- Windows: `~/.vigil3/slither-win.exe`
+
+## Update
 
 ```bash
-npx hardhat my-task
+npm update vigil3
 ```
 
-You should see the following output:
+## License
 
-```
-Hello, Hardhat!
-```
-
-### Configuration
-
-You can configure the greeting that's printed by using the `myConfig` field in your Hardhat config. For example, you can have this config:
-
-```ts
-import myPlugin from "hardhat-my-plugin";
-
-export default {
-  plugins: [myPlugin],
-  myConfig: {
-    greeting: "Hola",
-  },
-  //...
-};
-```
-
-### Network logs
-
-This plugin also adds some example code to log different network events. To see it in action, all you need to do is run your Hardhat tests, deployment, or a script.
+MIT
