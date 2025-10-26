@@ -1,5 +1,6 @@
 import { task } from "hardhat/config";
 import type { HardhatPlugin } from "hardhat/types/plugins";
+import { ArgumentType } from "hardhat/types/arguments";
 
 import "./type-extensions.js";
 
@@ -12,9 +13,9 @@ const plugin: HardhatPlugin = {
   tasks: [
       task("v3", "vigil3 is up :)")
       .setAction(() => import("./tasks/v3.js"))
-      .build()
+      .build(),
 
-      /*task("vigil3", "Analyze Solidity files with Slither")
+      task("vigil3", "Analyze Solidity files with Slither")
       .addOption({
         name: "file",
         description: "Path to Solidity file or folder",
@@ -22,11 +23,11 @@ const plugin: HardhatPlugin = {
         defaultValue: "contracts",
       })
       .setAction(() => import("./tasks/vigil3.js"))
-      .build(),*/
+      .build(),
 
-    /*task("compile", "Compile and enforce Vigil3 security checks")
+    task("compile", "Compile and enforce Vigil3 security checks")
       .setAction(() => import("./tasks/compile.js"))
-      .build(),*/
+      .build(),
   ],
 };
 
