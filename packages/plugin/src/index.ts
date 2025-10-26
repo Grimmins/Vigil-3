@@ -18,13 +18,7 @@ const plugin: HardhatPlugin = {
       task("vigil3", "Analyze Solidity files with Slither")
       .addPositionalArgument({
         name: "file",
-        description: "Path to Solidity file or folder",
-        type: ArgumentType.STRING,
-        defaultValue: "contracts",
-      })
-      .addOption({
-        name: "file",
-        description: "Path to Solidity file or folder (optional flag)",
+        description: "Path to Solidity file or folder (default: contracts)",
         type: ArgumentType.STRING,
         defaultValue: "contracts",
       })
