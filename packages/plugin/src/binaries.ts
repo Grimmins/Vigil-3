@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import https from "https";
 
-const BASE_URL = "https://github.com/Grimmins/Vigil3/releases/download/main";
+const BASE_URL = "https://github.com/Grimmins/Vigil-3/releases/download/main";
 
 const BINARIES: Record<string, string> = {
   linux: "slither-linux",
