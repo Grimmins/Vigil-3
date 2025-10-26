@@ -36,7 +36,7 @@ export async function runSlither(filePath: string): Promise<string> {
     });
 
     proc.on("close", (code) => {
-      if (code !== 0) {
+      if (code !== 0 && code !== 255) {
         reject(new Error(`[vigil3] Slither exited with code ${code}`));
       } else {
         resolve();
