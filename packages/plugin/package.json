@@ -1,6 +1,6 @@
 {
   "name": "vigil3",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "description": "Hardhat 3 plugin template",
   "license": "MIT",
   "type": "module",
