@@ -35,23 +35,58 @@ export async function getSlitherBinaryPath(): Promise<string> {
   return binaryPath;
 }
 
-function downloadBinary(url: string, dest: string) {
-  const file = fs.createWriteStream(dest);
+function downloadBinary(url: string, dest: string, redirectCount = 0): Promise<void> {
+  const MAX_REDIRECTS = 5;
 
   return new Promise<void>((resolve, reject) => {
-    https.get(url, (response) => {
-      if (response.statusCode !== 200) {
-        reject(new Error(`Download failed: ${response.statusCode}`));
-        return;
-      }
+    const file = fs.createWriteStream(dest);
 
-      response.pipe(file);
-      file.on("finish", () => {
+    https
+      .get(url, (res) => {
+        const { statusCode, headers } = res;
+
+        // Gérer les redirections
+        if (
+          statusCode &&
+          [301, 302, 303, 307, 308].includes(statusCode) &&
+          headers.location
+        ) {
+          if (redirectCount >= MAX_REDIRECTS) {
+            file.close();
+            fs.unlink(dest, () => reject(new Error("Too many redirects")));
+            return;
+          }
+
+          file.close();
+          fs.unlink(dest, () => {
+            const nextUrl = headers.location!.startsWith("http")
+              ? headers.location!
+              : new URL(headers.location!, url).href;
+            console.log(`[vigil3] Redirecting to ${nextUrl}`);
+            downloadBinary(nextUrl, dest, redirectCount + 1)
+              .then(resolve)
+              .catch(reject);
+          });
+          return;
+        }
+
+        if (statusCode !== 200) {
+          file.close();
+          fs.unlink(dest, () =>
+            reject(new Error(`Download failed: ${statusCode}`))
+          );
+          return;
+        }
+
+        res.pipe(file);
+        file.on("finish", () => {
+          file.close();
+          resolve();
+        });
+      })
+      .on("error", (err) => {
         file.close();
-        resolve();
+        fs.unlink(dest, () => reject(err));
       });
-    }).on("error", (err) => {
-      fs.unlink(dest, () => reject(err));
-    });
   });
 }
